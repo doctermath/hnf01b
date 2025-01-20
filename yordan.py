@@ -1,28 +1,31 @@
 # %%
-
 import numpy as np
 import pandas as pd
 
 import time
 import sys
 import requests
+import logging
 
 from datetime import datetime
 
+# %%
 # Set Display Width Longer
-pd.options.display.max_colwidth = 100 # 100 for long width
+pd.options.display.max_colwidth = 100  # 100 for long width
 
+# Set Logging
+logging.basicConfig(
+    format="{asctime} - {levelname} - {message}",
+    style="{",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO,
+    handlers=[logging.FileHandler("logs/forecast.log"), logging.StreamHandler()],
+)
+logging.info("="*20)
+logging.info("BEGIN PYTHON FORECAST PROGRAM FOR SPAREPARTS")
 
 # %%
-# Function to print a message with log
-def log_message(message):
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"{current_time} - {message}")
-
-log_message("BEGIN PYTHON FORECAST PROGRAM FOR SPAREPARTS")
-
-# %%
-log_message('BEGIN Retrieving API')
+logging.info('BEGIN Retrieving API')
 
 max_retries=8
 delay=2
@@ -44,18 +47,18 @@ for attempt in range(1, max_retries + 1):
         response.raise_for_status()
         data = response.json()
         if 'data' in data and 'data-count' in data:
-            log_message(str(data['data-count']) + " Data retrived from API")
+            logging.info(str(data['data-count']) + " Data retrived from API")
             df = pd.DataFrame(data['data'])
             break
         else:
-            log_message("Error: Unexpected API response format")
+            logging.info("Error: Unexpected API response format")
             break
     except requests.RequestException as e:
-        log_message(f"Attempt {attempt}: API request failed - {e}")
+        logging.info(f"Attempt {attempt}: API request failed - {e}")
         if attempt < max_retries:
             time.sleep(delay * (2 ** (attempt - 1)))  # Exponential backoff
         else:
-            log_message("Max retries reached. Exiting.")
+            logging.info("Max retries reached. Exiting.")
             sys.exit(1)
 
     
@@ -64,17 +67,17 @@ for attempt in range(1, max_retries + 1):
 
 # %%
 # Contruct All Branch Data and Concat It To DF
-log_message("BEGIN Constructing All Branch Data and Combine It to DF")
+logging.info("BEGIN Constructing All Branch Data and Combine It to DF")
 
 df_all = df.groupby(['agency', 'partno'], as_index=False)['d'].apply(lambda x: np.sum(np.array(x.tolist()), axis=0))
 df_all.insert(0, 'branch', 'ALL')
 df = pd.concat([df, df_all], ignore_index=True)
 
-log_message(f"All Branch Data Constructed And Merged With DF With Total Data {len(df)}")
+logging.info(f"All Branch Data Constructed And Merged With DF With Total Data {len(df)}")
 
 # %%
 # Calculate Forecast
-log_message("BEGIN Forcast Calculation")
+logging.info("BEGIN Forcast Calculation")
 
 def calc_sma(x):
     ser = pd.Series(x)
@@ -86,39 +89,39 @@ df['std']  = df['d'].apply(lambda x: np.std(x))
 df['mean'] = df['d'].apply(lambda x: np.mean(x))
 df['ub']   = df['d'].apply(lambda x: np.max(x))
 
-log_message("Forcast Calculation Completed")
+logging.info("Forcast Calculation Completed")
 
 
 # %%
 # Send Data Back To API
-log_message("BEGIN Constructing Final Data and send it back to API")
+logging.info("BEGIN Constructing Final Data and send it back to API")
 
 url = "http://172.16.5.6:8080/v1/web/test9-post"
 
 result = df.drop('d', axis=1)
 result_json = result.to_dict(orient='records')
 
-log_message("Start Sending " + str(len(result)) + " Row To API")
+logging.info("Start Sending " + str(len(result)) + " Row To API")
 
 for attempt in range(1, max_retries + 1):
     try:
         response = requests.post(url, json=result_json)
         response.raise_for_status() 
-        log_message("Send API Complete")
-        log_message(f"Status Code: {response.status_code}")
+        logging.info("Send API Complete")
+        logging.info(f"Status Code: {response.status_code}")
 
         if response.status_code == 200:
-            log_message(f"Response Body: {response.text}")
+            logging.info(f"Response Body: {response.text}")
         else:
-            log_message("Send Failed")
+            logging.info("Send Failed")
 
         break
     except requests.RequestException as e:
-        log_message(f"Attempt {attempt}: API request failed - {e}")
+        logging.info(f"Attempt {attempt}: API request failed - {e}")
         if attempt < max_retries:
             time.sleep(delay * (2 ** (attempt - 1)))  # Exponential backoff
         else:
-            log_message("Max retries reached. Exiting.")
+            logging.info("Max retries reached. Exiting.")
             sys.exit(1)  # Stop execution after max retries
 
 
