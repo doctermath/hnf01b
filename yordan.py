@@ -6,12 +6,17 @@ import time
 import sys
 import requests
 import logging
+import os
 
 from datetime import datetime
 
 # %%
 # Set Display Width Longer
 pd.options.display.max_colwidth = 100  # 100 for long width
+
+# create folder logs/forecast.log if not exist
+if not os.path.exists("logs"):
+    os.makedirs("logs")
 
 # Set Logging
 logging.basicConfig(
