@@ -188,7 +188,7 @@ df['best_mae'] = best_maes
 
 df['wma'], df['wma_result'] = zip(*df.apply(lambda row: (
     wma_forecast_with_weights(row['wma_clipped_d'], row['best_weights'])[3:][-12:],
-    wma_forecast_with_weights(row['wma_clipped_d'], row['best_weights'])[-12:]
+    wma_forecast_with_weights(row['wma_clipped_d'], row['best_weights'])[-1:]
 ), axis=1))
 
 # display(df)
