@@ -62,7 +62,7 @@ params = {
     "partno": ""
 }
 
-url = "http://172.16.5.6:8080/v1/web/test9"
+url = "http://localhost:8080/v1/web/test9"
     
 for attempt in range(1, max_retries + 1):
     try:
