@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[76]:
+# In[4]:
 
 
 import numpy as np
@@ -24,7 +24,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from statsmodels.tsa.api import SimpleExpSmoothing, Holt, ExponentialSmoothing
 
 
-# In[54]:
+# In[5]:
 
 
 # Set Display Width Longer
@@ -46,7 +46,7 @@ logging.info("="*40)
 logging.info("BEGIN PYTHON FORECAST PROGRAM FOR SPAREPARTS")
 
 
-# In[55]:
+# In[6]:
 
 
 # Retrive data from API
@@ -58,8 +58,8 @@ delay=2
 # Initialize Start and End Date
 start_date = (datetime.today().replace(day=1) - relativedelta(months=16)).strftime("%Y-%m-%d") 
 end_date = (datetime.today().replace(day=1) - relativedelta(months=1)).strftime("%Y-%m-%d")  
-print(start_date)
-print(end_date)
+
+logging.info(f"API Data From Start Date: {start_date} to End Date: {end_date}")
 
 params = {
     "start-date": start_date,
@@ -96,7 +96,7 @@ for attempt in range(1, max_retries + 1):
 # display(df.head())
 
 
-# In[56]:
+# In[7]:
 
 
 # Contruct All Branch Data and Concat It To DF
@@ -113,7 +113,7 @@ logging.info(
 )
 
 
-# In[57]:
+# In[8]:
 
 
 # Calculate Forecast
@@ -121,7 +121,7 @@ logging.info("BEGIN Forcast Calculation")
 # display(df)
 
 
-# In[58]:
+# In[9]:
 
 
 logging.info("BEGIN Mean, Std, UB Calculation, and Construct Clipping Data")
@@ -140,7 +140,7 @@ df['clipped_d'] = df.apply(lambda row: np.clip(row['d'][-13:-1], 0, row['ub']).t
 # display(df.head())
 
 
-# In[59]:
+# In[10]:
 
 
 logging.info("BEGIN Simple Moving Average Calculation")
@@ -153,7 +153,7 @@ df['ma_result'] = df['ma'].apply(lambda x: x[-1:])
 # display(df.head())
 
 
-# In[60]:
+# In[11]:
 
 
 logging.info("BEGIN Weighted Moving Average Calculation")
@@ -202,7 +202,7 @@ df['wma'], df['wma_result'] = zip(*df.apply(lambda row: (
 # display(df)
 
 
-# In[61]:
+# In[12]:
 
 
 logging.info("BEGIN Exponential Weighted Moving Average Calculation")
@@ -229,7 +229,7 @@ df['ewma'], df['ewma_result'] = zip(*df['clipped_d'].apply(lambda x: ewma_foreca
 # display(df)
 
 
-# In[62]:
+# In[13]:
 
 
 logging.info("BEGIN Linear Reggression Calculation")
@@ -250,7 +250,7 @@ df['lr_result'] = df['lr'].apply(lambda x: x[-1:])
 # display(df)
 
 
-# In[63]:
+# In[14]:
 
 
 logging.info("BEGIN Polynomial Reggression Calculation")
@@ -281,7 +281,7 @@ df['pr3_result'] = df['pr3'].apply(lambda x: x[-1:])
 # display(df)
 
 
-# In[64]:
+# In[15]:
 
 
 logging.info("BEGIN Simple Exponential Smoothing Calculation")
@@ -304,7 +304,7 @@ df['ses_result'] = df['ses'].apply(lambda x: x[-1:])
 # display(df)
 
 
-# In[65]:
+# In[16]:
 
 
 logging.info("BEGIN Double Exponential Smoothing Calculation")
@@ -326,7 +326,7 @@ df['des_result'] = df['des'].apply(lambda x: x[-1:])
 # display(df)
 
 
-# In[66]:
+# In[17]:
 
 
 logging.info("BEGIN Metric Calculation")
@@ -376,7 +376,7 @@ df['metrics'] = df['metric'].apply(lambda x: x['metrics'])
 # display(df[['best_model', 'metrics']])
 
 
-# In[67]:
+# In[18]:
 
 
 logging.info("BEGIN Data Selection Calculation")
@@ -456,13 +456,13 @@ df['FD_final'] = df['FD_forecast'].apply(np.ceil)
 # display(df)
 
 
-# In[68]:
+# In[19]:
 
 
 logging.info("Forcast Calculation Completed")
 
 
-# In[69]:
+# In[20]:
 
 
 logging.info("Begin Creating Excel For DataFrame")
@@ -484,7 +484,7 @@ logging.info(f"Excel File Created: {filename}, Size: {file_size:.2f} MB")
 
 
 
-# In[70]:
+# In[21]:
 
 
 # Send Data Back To API
