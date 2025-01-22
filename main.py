@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[19]:
+# In[76]:
 
 
 import numpy as np
@@ -13,6 +13,8 @@ import requests
 import logging
 import os
 
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from scipy import stats
 from scipy.optimize import minimize
 from sklearn.model_selection import train_test_split
@@ -22,7 +24,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from statsmodels.tsa.api import SimpleExpSmoothing, Holt, ExponentialSmoothing
 
 
-# In[20]:
+# In[54]:
 
 
 # Set Display Width Longer
@@ -44,7 +46,7 @@ logging.info("="*40)
 logging.info("BEGIN PYTHON FORECAST PROGRAM FOR SPAREPARTS")
 
 
-# In[21]:
+# In[55]:
 
 
 # Retrive data from API
@@ -53,10 +55,16 @@ logging.info('BEGIN Retrieving API')
 max_retries=8
 delay=2
 
+# Initialize Start and End Date
+start_date = (datetime.today().replace(day=1) - relativedelta(months=16)).strftime("%Y-%m-%d") 
+end_date = (datetime.today().replace(day=1) - relativedelta(months=1)).strftime("%Y-%m-%d")  
+print(start_date)
+print(end_date)
+
 params = {
-    "start-date": "2023-10-01",
-    "end-date": "2025-01-01",
-    "exclude-older": "2024-01-01",
+    "start-date": start_date,
+    "end-date": end_date,
+    "exclude-older": start_date,
     "branch": "",
     "agency": "",
     "partno": ""
@@ -85,10 +93,10 @@ for attempt in range(1, max_retries + 1):
             logging.info("Max retries reached. Exiting.")
             sys.exit(1)
 
-# display(df)
+# display(df.head())
 
 
-# In[22]:
+# In[56]:
 
 
 # Contruct All Branch Data and Concat It To DF
@@ -105,7 +113,7 @@ logging.info(
 )
 
 
-# In[23]:
+# In[57]:
 
 
 # Calculate Forecast
@@ -113,7 +121,7 @@ logging.info("BEGIN Forcast Calculation")
 # display(df)
 
 
-# In[24]:
+# In[58]:
 
 
 logging.info("BEGIN Mean, Std, UB Calculation, and Construct Clipping Data")
@@ -132,7 +140,7 @@ df['clipped_d'] = df.apply(lambda row: np.clip(row['d'][-13:-1], 0, row['ub']).t
 # display(df.head())
 
 
-# In[25]:
+# In[59]:
 
 
 logging.info("BEGIN Simple Moving Average Calculation")
@@ -145,12 +153,12 @@ df['ma_result'] = df['ma'].apply(lambda x: x[-1:])
 # display(df.head())
 
 
-# In[26]:
+# In[60]:
 
 
 logging.info("BEGIN Weighted Moving Average Calculation")
 
-df['wma_clipped_d'] = df.apply(lambda row: np.clip(row['d'][-15:], 0, row['ub']).tolist(), axis=1)
+df['wma_clipped_d'] = df.apply(lambda row: np.clip(row['d'][-16:-1], 0, row['ub']).tolist(), axis=1)
 
 def wma_forecast_with_weights(df, weights):
     wma_values = [None] * 3
@@ -194,7 +202,7 @@ df['wma'], df['wma_result'] = zip(*df.apply(lambda row: (
 # display(df)
 
 
-# In[27]:
+# In[61]:
 
 
 logging.info("BEGIN Exponential Weighted Moving Average Calculation")
@@ -221,7 +229,7 @@ df['ewma'], df['ewma_result'] = zip(*df['clipped_d'].apply(lambda x: ewma_foreca
 # display(df)
 
 
-# In[28]:
+# In[62]:
 
 
 logging.info("BEGIN Linear Reggression Calculation")
@@ -242,7 +250,7 @@ df['lr_result'] = df['lr'].apply(lambda x: x[-1:])
 # display(df)
 
 
-# In[29]:
+# In[63]:
 
 
 logging.info("BEGIN Polynomial Reggression Calculation")
@@ -273,7 +281,7 @@ df['pr3_result'] = df['pr3'].apply(lambda x: x[-1:])
 # display(df)
 
 
-# In[30]:
+# In[64]:
 
 
 logging.info("BEGIN Simple Exponential Smoothing Calculation")
@@ -296,7 +304,7 @@ df['ses_result'] = df['ses'].apply(lambda x: x[-1:])
 # display(df)
 
 
-# In[31]:
+# In[65]:
 
 
 logging.info("BEGIN Double Exponential Smoothing Calculation")
@@ -318,7 +326,7 @@ df['des_result'] = df['des'].apply(lambda x: x[-1:])
 # display(df)
 
 
-# In[32]:
+# In[66]:
 
 
 logging.info("BEGIN Metric Calculation")
@@ -368,7 +376,7 @@ df['metrics'] = df['metric'].apply(lambda x: x['metrics'])
 # display(df[['best_model', 'metrics']])
 
 
-# In[33]:
+# In[67]:
 
 
 logging.info("BEGIN Data Selection Calculation")
@@ -448,13 +456,13 @@ df['FD_final'] = df['FD_forecast'].apply(np.ceil)
 # display(df)
 
 
-# In[34]:
+# In[68]:
 
 
 logging.info("Forcast Calculation Completed")
 
 
-# In[35]:
+# In[69]:
 
 
 logging.info("Begin Creating Excel For DataFrame")
@@ -476,7 +484,7 @@ logging.info(f"Excel File Created: {filename}, Size: {file_size:.2f} MB")
 
 
 
-# In[36]:
+# In[70]:
 
 
 # Send Data Back To API
