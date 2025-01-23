@@ -117,7 +117,7 @@ logging.info(
 
 
 # Calculate Forecast
-logging.info("BEGIN Forcast Calculation")
+logging.info("BEGIN Forecast Calculation")
 # display(df)
 
 
@@ -459,7 +459,7 @@ df['FD_final'] = df['FD_forecast'].apply(np.ceil)
 # In[19]:
 
 
-logging.info("Forcast Calculation Completed")
+logging.info("Forecast Calculation Completed")
 
 
 # In[20]:
