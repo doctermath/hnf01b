@@ -46,7 +46,7 @@ logging.info("="*40)
 logging.info("BEGIN PYTHON FORECAST PROGRAM FOR SPAREPARTS")
 
 
-# In[6]:
+# In[3]:
 
 
 # Retrive data from API
@@ -70,7 +70,7 @@ params = {
     "partno": ""
 }
 
-url = "http://localhost:1978/main/web/gdmdcall"
+url = "http://localhost:8080/v1/web/test9"
     
 for attempt in range(1, max_retries + 1):
     try:
@@ -490,7 +490,7 @@ logging.info(f"Excel File Created: {filename}, Size: {file_size:.2f} MB")
 # Send Data Back To API
 logging.info("BEGIN Constructing Final Data and send it back to API")
 
-url = "http://localhost:1978/main/web/postdmdcall"
+url = "http://172.16.5.6:8080/v1/web/test9-post"
 
 # construct result with branch, agency, partno
 result = df[['branch', 'agency', 'partno', 'FD_final', 'std_12_FD', 'mean_12_FD', 'ub_FD']]
